@@ -12,6 +12,7 @@ target_link_libraries(print-opt-process benchmarks)
 add_library(genetic_algo_utils genetic_algo_utils.cpp)
 target_include_directories(genetic_algo_utils PUBLIC include)
 target_link_libraries(genetic_algo_utils PUBLIC ldpc-utils file-processor Eigen3::Eigen)
+add_compile_definitions(CMAKE_BINARY_DIR="${CMAKE_BINARY_DIR}")
 
 add_library(genetic_algo genetic_algo.cpp result-mt.cpp)
 target_include_directories(genetic_algo PUBLIC include)

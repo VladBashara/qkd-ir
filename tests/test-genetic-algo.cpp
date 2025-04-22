@@ -20,7 +20,7 @@ TEST_SUITE_BEGIN("Validation");
 
 TEST_CASE("popul_size validate") {
     double P_m = 0.4;
-    std::string mat_path = CMAKE_BINARY_DIR + std::string("/experiments/data/BG1.alist");
+    std::string mat_path = CMAKE_BINARY_DIR + std::string("/data/BG1.alist");
     size_t Z = 3;
     std::pair<double, double> QBER_range = {0.0, 0.02};
     double QBER_step = 0.002;
@@ -38,7 +38,7 @@ TEST_CASE("popul_size validate") {
 
 TEST_CASE("P_m validate") {
     size_t popul_size = 5;
-    std::string mat_path = CMAKE_BINARY_DIR + std::string("/experiments/data/BG1.alist");
+    std::string mat_path = CMAKE_BINARY_DIR + std::string("/data/BG1.alist");
     size_t Z = 3;
     std::pair<double, double> QBER_range = {0.0, 0.02};
     double QBER_step = 0.002;
@@ -57,7 +57,7 @@ TEST_CASE("P_m validate") {
 TEST_CASE("iter_amount validate") {
     size_t popul_size = 5;
     double P_m = 0.4;
-    std::string mat_path = CMAKE_BINARY_DIR + std::string("/experiments/data/BG1.alist");
+    std::string mat_path = CMAKE_BINARY_DIR + std::string("/data/BG1.alist");
     size_t Z = 3;
     std::pair<double, double> QBER_range = {0.0, 0.02};
     double QBER_step = 0.002;

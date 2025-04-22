@@ -5,28 +5,6 @@
 #include <random>
 #include "LogSender.h"
 
-const int64_t MILLISECONDS_RATIO = 1000;
-
-int64_t getCurrentMilliseconds()
-{
-    auto now = std::chrono::system_clock::now();
-    auto duration = now.time_since_epoch();
-    return std::chrono::duration_cast<std::chrono::milliseconds>(duration).count();
-}
-
-std::string getCurrentTimeStr()
-{
-    int64_t current_stamp = getCurrentMilliseconds();
-    std::time_t timestamp = current_stamp / MILLISECONDS_RATIO;
-    struct std::tm datetime = *std::localtime(&timestamp);
-    char timestampPart[21];
-    std::strftime(timestampPart, sizeof(timestampPart), "%Y-%m-%d %H:%M:%S.", &datetime);
-    int64_t milliseconds = current_stamp % MILLISECONDS_RATIO;
-
-    char milPart[4];
-    std::sprintf(milPart, "%03ld", milliseconds);
-    return std::string(timestampPart) + std::string(milPart);
-}
 
 void generateRandomLogs(LogSender& sender, int count, const std::string& source)
 {

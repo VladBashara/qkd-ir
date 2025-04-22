@@ -3,6 +3,7 @@
 #include "genetic_algo_utils.hpp"
 #include "genetic_algo.hpp"
 #include "result-mt.h"
+#include "LogSender.h"
 
 #include <string>
 #include <vector>
@@ -16,6 +17,14 @@
 #include <filesystem>
 #include <chrono>
 #include <taskflow/taskflow.hpp>
+
+void generateLogs(LogSender &sender, std::string severity, std::string source, std::string messageType, std::string message) {
+    
+    std::string timestamp = getCurrentTimeStr();
+    std::string logMessage = "[" + timestamp + "] " + severity + " " + source + "," + messageType + ": " + message;
+
+    sender << std::pair{LogLevel::ALL, logMessage};
+}
 
 size_t get_seed() {
     return std::chrono::steady_clock::now().time_since_epoch().count();

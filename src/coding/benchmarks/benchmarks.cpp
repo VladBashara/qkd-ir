@@ -323,6 +323,10 @@ auto BaseBenchmark::find_intersection(double ber_start, double ber_stop, double 
     double right{ber_stop};
 	MemoryManager mm{m_H, STAT_ITERATIONS};
 
+	// Compute fers for left and right bounds
+	auto [fer_left, _] = compute_one_point(left, alg_type, mm, STAT_ITERATIONS, verbose);
+	auto [fer_right, _] = compute_one_point(right, alg_type, mm, STAT_ITERATIONS, verbose);
+
     while (right - left > ber_prec) {
         double mid{(left + right) / 2.0};
 
@@ -336,11 +340,15 @@ auto BaseBenchmark::find_intersection(double ber_start, double ber_stop, double 
 
         if (fer < threshold) {
             left = mid;
+			fer_left = fer;
         } else {
             right = mid;
+			fer_right = fer;
         }
     }
-    return (left + right) / 2.0;
+    double x1{left}, y1{fer_left}, x2{right}, y2{fer_right};
+	double x3{left}, y3{threshold}, x4{right}, y4{threshold};
+	return ((x1 * y2 - y1 * x2) * (x3 - x4) - (x1 - x2) * (x3 * y4 - y3 * x4)) / ((x1 - x2) * (y3 - y4) - (y1 - y2) * (x3 - x4));
 }
 
 

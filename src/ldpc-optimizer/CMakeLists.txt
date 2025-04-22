@@ -16,7 +16,7 @@ add_compile_definitions(CMAKE_BINARY_DIR="${CMAKE_BINARY_DIR}")
 
 add_library(genetic_algo genetic_algo.cpp result-mt.cpp)
 target_include_directories(genetic_algo PUBLIC include)
-target_link_libraries(genetic_algo PUBLIC genetic_algo_utils benchmarks)
+target_link_libraries(genetic_algo PUBLIC genetic_algo_utils benchmarks log-sender)
 
 # add_library(parallel-framework result.cpp worker.cpp manager.cpp base-manager.cpp)
 # target_include_directories(parallel-framework PUBLIC ${Boost_INCLUDE_DIRS} include)

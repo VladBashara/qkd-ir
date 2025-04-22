@@ -1,4 +1,5 @@
 #include "result-mt.h"
+#include "LogSender.h"
 
 #include <string>
 #include <map>
@@ -11,6 +12,7 @@ struct GeneticMatrix {
     std::string matrix_id;
 };
 
+void generateLogs(LogSender &sender, std::string severity, std::string source, std::string messageType, std::string message);
 std::multimap<Result, GeneticMatrix, std::greater<Result>> calculate_obj_func(
     const BG_type bg_type, const std::multimap<Result, GeneticMatrix, std::greater<Result>> &population_map, const std::pair<double, double> QBER_range,
     const size_t Z

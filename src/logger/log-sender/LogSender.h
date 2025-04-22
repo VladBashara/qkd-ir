@@ -94,6 +94,12 @@ private:
     std::map<LogLevel, std::vector<std::shared_ptr<LogReceiver>>> receivers;
 };
 
+const int64_t MILLISECONDS_RATIO = 1000;
+
+int64_t getCurrentMilliseconds();
+
+std::string getCurrentTimeStr();
+
 #endif
 
 /**

@@ -13,4 +13,3 @@ target_link_libraries(test-genetic-algo PUBLIC genetic_algo doctest)
 add_test(NAME test-genetic-algo COMMAND test-genetic-algo --force-colors -d)
 
 add_compile_definitions(CMAKE_BINARY_DIR="${CMAKE_BINARY_DIR}")
-

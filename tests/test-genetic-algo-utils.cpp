@@ -1,5 +1,9 @@
 #define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
 
+#ifndef CMAKE_BINARY_DIR
+#define CMAKE_BINARY_DIR ""
+#endif
+
 #include "ldpc-utils.hpp"
 #include "genetic_algo_utils.hpp"
 // #include "alist_matrix.h"
@@ -147,7 +151,7 @@ TEST_CASE("BG1: invalid pos") {
 
     MyMatrix mat_actual = make_mutation(BG_type::BG1, pos_vec, mat_in);
 
-    MyMatrix mat_BG1 = load_matrix_from_alist("../../experiments/data/BG1.alist");
+    MyMatrix mat_BG1 = load_matrix_from_alist(CMAKE_BINARY_DIR + std::string("/data/BG1.alist"));
 
     MyMatrix mat_diff(mat_BG1.rows(), mat_BG1.cols());
     for (auto pos : pos_vec) {
@@ -218,7 +222,7 @@ TEST_CASE("small matrices: 100 loops") {
 
 TEST_CASE("BG1") {
 
-    MyMatrix mat_in = load_matrix_from_alist("../../experiments/data/BG1.alist");
+    MyMatrix mat_in = load_matrix_from_alist(CMAKE_BINARY_DIR + std::string("/data/BG1.alist"));
 
     int mutation_seed = 7;
 
@@ -239,7 +243,7 @@ TEST_CASE("BG1") {
 
 TEST_CASE("BG2") {
 
-    MyMatrix mat_in = load_matrix_from_alist("../../experiments/data/BG2.alist");
+    MyMatrix mat_in = load_matrix_from_alist(CMAKE_BINARY_DIR + std::string("/data/BG2.alist"));
 
     int mutation_seed = 7;
 

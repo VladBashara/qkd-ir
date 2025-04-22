@@ -1,3 +1,7 @@
+#ifndef CMAKE_BINARY_DIR
+#define CMAKE_BINARY_DIR ""
+#endif
+
 #include "genetic_algo_utils.hpp"
 #include "file-processor.h"
 #include "alist_matrix.h"
@@ -108,13 +112,13 @@ MyMatrix make_mutation(BG_type type, std::vector<std::pair<uint, uint>> pos_vec,
     switch (type) {
     case BG_type::BG1 :
 
-        mutated_matrix = load_matrix_from_alist("../../experiments/data/BG1.alist");
+        mutated_matrix = load_matrix_from_alist(CMAKE_BINARY_DIR + std::string("/data/BG1.alist"));
 
         break;
     
     case BG_type::BG2 :
 
-        mutated_matrix = load_matrix_from_alist("../../experiments/data/BG2.alist");
+        mutated_matrix = load_matrix_from_alist(CMAKE_BINARY_DIR + std::string("/data/BG2.alist"));
 
         break;
     
@@ -143,13 +147,13 @@ MyMatrix make_random_mutation(BG_type type, uint bits_count, int mutation_seed, 
     switch (type) {
     case BG_type::BG1 :
 
-        mat_loaded = load_matrix_from_alist("../../experiments/data/BG1.alist");
+        mat_loaded = load_matrix_from_alist(CMAKE_BINARY_DIR + std::string("/data/BG1.alist"));
 
         break;
     
     case BG_type::BG2 :
 
-        mat_loaded = load_matrix_from_alist("../../experiments/data/BG2.alist");
+        mat_loaded = load_matrix_from_alist(CMAKE_BINARY_DIR + std::string("/data/BG2.alist"));
 
         break;
     

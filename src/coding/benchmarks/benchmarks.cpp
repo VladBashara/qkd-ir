@@ -324,8 +324,9 @@ auto BaseBenchmark::find_intersection(double ber_start, double ber_stop, double 
 	MemoryManager mm{m_H, STAT_ITERATIONS};
 
 	// Compute fers for left and right bounds
-	auto [fer_left, _] = compute_one_point(left, alg_type, mm, STAT_ITERATIONS, verbose);
-	auto [fer_right, _] = compute_one_point(right, alg_type, mm, STAT_ITERATIONS, verbose);
+	double fer_left, fer_right;
+	std::tie(fer_left, std::ignore) = compute_one_point(left, alg_type, mm, STAT_ITERATIONS, verbose);
+	std::tie(fer_right, std::ignore) = compute_one_point(right, alg_type, mm, STAT_ITERATIONS, verbose);
 
     while (right - left > ber_prec) {
         double mid{(left + right) / 2.0};

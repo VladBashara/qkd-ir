@@ -42,8 +42,14 @@ int main(int argc, char* argv[]) {
     size_t iter_amount = 2;
 
     print_parameters(popul_size, P_m, mat_path, Z, QBER_range, QBER_step, mu, iter_amount);
+    
+    LogSender logger;
 
-    std::multimap<size_t, std::multimap<IntersectionMetric, GeneticMatrix, std::greater<IntersectionMetric>>> some_res = genetic_algo(popul_size, P_m, mat_path, Z, QBER_range, mu, iter_amount);
+	CSVReceiverT<std::string, std::string, std::string, std::string, std::string> csv(
+		"logs1.csv", {"timestamp", "level", "source", "type", "message"}
+	);
+	
+    std::multimap<size_t, std::multimap<IntersectionMetric, GeneticMatrix, std::greater<IntersectionMetric>>> some_res = genetic_algo(popul_size, P_m, mat_path, Z, QBER_range, mu, iter_amount, logger, csv);
 
 
     // print metric of default matrix

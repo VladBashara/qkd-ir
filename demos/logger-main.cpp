@@ -5,8 +5,8 @@
 #include <random>
 #include "LogSender.h"
 
-
-void generateRandomLogs(LogSender& sender, int count, const std::string& source)
+template<typename CSV>
+void generateRandomLogs(LogSender& sender, CSV& csv, int count, const std::string& source)
 {
     std::random_device rd;
     std::mt19937 gen(rd());
@@ -27,6 +27,9 @@ void generateRandomLogs(LogSender& sender, int count, const std::string& source)
         std::string logMessage = "[" + timestamp + "] " + severity + " " + source + "," + messageType + ": " + message;
 
         sender << std::make_pair(LogLevel::INFO, logMessage);
+
+        csv.writeRow(timestamp, severity, source, messageType, message);
+
         std::this_thread::sleep_for(std::chrono::seconds(1));
     }
 }
@@ -39,21 +42,23 @@ int main()
     logger1.addConsoleReceiver(LogLevel::INFO);
     logger1.addFileReceiver(LogLevel::INFO, "logs1.txt");
     logger1.addNetworkReceiver(LogLevel::INFO, "127.0.0.1", 8002);
-    //logger1.addCSVReceiver(LogLevel::INFO, "logs1.csv"); 
 
     logger2.addConsoleReceiver(LogLevel::INFO);
     logger2.addFileReceiver(LogLevel::INFO, "logs2.txt");
     logger2.addNetworkReceiver(LogLevel::INFO, "127.0.0.1", 8003);
-    //logger2.addCSVReceiver(LogLevel::INFO, "logs2.csv");  
-    
-    
-    logger1.addCSVReceiver(LogLevel::INFO, "logs1.csv", {"timestamp", "level", "source", "type", "message"});
-	logger2.addCSVReceiver(LogLevel::INFO, "logs2.csv", {"timestamp", "level", "source", "type", "message"});
-    
+
+    CSVReceiverT<std::string, std::string, std::string, std::string, std::string> csv1(
+        "logs1.csv", {"timestamp", "level", "source", "type", "message"}
+    );
+
+    CSVReceiverT<std::string, std::string, std::string, std::string, std::string> csv2(
+        "logs2.csv", {"timestamp", "level", "source", "type", "message"}
+    );
+
     std::cout << "Starting log generation...\n";
 
-    std::thread t1(generateRandomLogs, std::ref(logger1), 5, "sensor_module");
-    std::thread t2(generateRandomLogs, std::ref(logger2), 5, "laser_driver");
+    std::thread t1(generateRandomLogs<decltype(csv1)>, std::ref(logger1), std::ref(csv1), 5, "sensor_module");
+    std::thread t2(generateRandomLogs<decltype(csv2)>, std::ref(logger2), std::ref(csv2), 5, "laser_driver");
 
     t1.join();
     t2.join();

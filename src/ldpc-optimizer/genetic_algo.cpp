@@ -18,12 +18,15 @@
 #include <chrono>
 #include <taskflow/taskflow.hpp>
 
-void generateLogs(LogSender &sender, std::string severity, std::string source, std::string messageType, std::string message) {
+template<typename CSV>
+void generateLogs(LogSender &sender, CSV& csv, std::string severity, std::string source, std::string messageType, std::string message) {
     
     std::string timestamp = getCurrentTimeStr();
     std::string logMessage = "[" + timestamp + "] " + severity + " " + source + "," + messageType + ": " + message;
 
     sender << std::pair{LogLevel::ALL, logMessage};
+    
+    csv.writeRow(timestamp, severity, source, messageType, message);
 }
 
 size_t get_seed() {
@@ -71,8 +74,9 @@ std::multimap<IntersectionMetric, GeneticMatrix, std::greater<IntersectionMetric
     return results_map;
 }
 
+template<typename CSV>
 std::multimap<size_t, std::multimap<IntersectionMetric, GeneticMatrix, std::greater<IntersectionMetric>>> genetic_algo(const size_t popul_size, const double P_m, const std::string mat_path, const size_t Z,
-                  const std::pair<double, double> QBER_range, const size_t mu, const size_t iter_amount) {
+                  const std::pair<double, double> QBER_range, const size_t mu, const size_t iter_amount, const LogSender &logger, const CSV& csv) {
     
     if (popul_size <= 2) {
         throw std::runtime_error("popul_size <= 2 : " + std::to_string(popul_size));
@@ -195,3 +199,8 @@ std::multimap<size_t, std::multimap<IntersectionMetric, GeneticMatrix, std::grea
 
     return population_per_epoch_map;
 }
+
+template std::multimap<size_t, std::multimap<IntersectionMetric, GeneticMatrix, std::greater<IntersectionMetric>>>
+genetic_algo<CSVReceiverT<std::string, std::string, std::string, std::string, std::string>>(size_t popul_size, double P_m, std::string mat_path, size_t Z,
+    std::pair<double, double> QBER_range, size_t mu, size_t iter_amount, const LogSender& logger, const CSVReceiverT<std::string, std::string, std::string, std::string, std::string>& csv
+);

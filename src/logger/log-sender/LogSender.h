@@ -94,9 +94,10 @@ private:
     std::thread senderThread; /**< Поток для асинхронной отправки сообщений */
     std::atomic<bool> stopFlag; /**< Флаг остановки потока отправки */
     
-    std::map<LogLevel, std::vector<std::shared_ptr<LogReceiver>>> receivers;
+    std::vector<std::pair<LogLevel, std::shared_ptr<void>>> csvReceivers;
     
     std::map<LogLevel, std::vector<std::shared_ptr<LogReceiver>>> receivers;
+
 };
 
 const int64_t MILLISECONDS_RATIO = 1000;

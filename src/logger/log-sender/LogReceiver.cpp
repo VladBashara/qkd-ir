@@ -78,44 +78,20 @@ WSACleanup();
 #endif
 }
 
-CSVReceiver::CSVReceiver(const std::string& filename, const std::vector<std::string>& columnNames)
-        : filename(filename), columns(columnNames), columnIndex(0) 
-        {
+template<typename... Ts>
+CSVReceiverT<Ts...>::CSVReceiverT(const std::string& filename, const std::vector<std::string>& columnNames)
+    : filename(filename), columns(columnNames)
+{
+    if (columns.size() != sizeof...(Ts))
+    {
+        throw std::runtime_error("Column count does not match type count.");
+    }
+
     verifyOrInitializeFile();
 }
 
-void CSVReceiver::operator<<(const std::string& msg)
-{
-    if (!csvFile.is_open())
-        return;
-
-    size_t pos1 = msg.find('[');
-    size_t pos2 = msg.find(']');
-    if (pos1 == std::string::npos || pos2 == std::string::npos)
-        return;
-
-    std::string timestamp = msg.substr(pos1 + 1, pos2 - pos1 - 1);
-
-    size_t levelStart = msg.find(' ', pos2 + 1);
-    size_t levelEnd = msg.find(' ', levelStart + 1);
-    std::string level = msg.substr(levelStart + 1, levelEnd - levelStart - 1);
-
-    size_t srcStart = levelEnd + 1;
-    size_t srcEnd = msg.find(',', srcStart);
-    std::string source = msg.substr(srcStart, srcEnd - srcStart);
-
-    size_t typeEnd = msg.find(':', srcEnd + 1);
-    std::string type = msg.substr(srcEnd + 1, typeEnd - srcEnd - 1);
-
-    std::string message = msg.substr(typeEnd + 2);
-
-    csvFile << timestamp << "," << level << "," << source << "," << type << "," << message << "\n";
-}
-
-
-
-
-void CSVReceiver::verifyOrInitializeFile()
+template<typename... Ts>
+void CSVReceiverT<Ts...>::verifyOrInitializeFile()
 {
     std::ifstream existingFile(filename);
     std::string firstLine;
@@ -156,23 +132,39 @@ void CSVReceiver::verifyOrInitializeFile()
     }
 }
 
-
-std::string CSVReceiver::formatColumns(const std::vector<std::string>& cols) 
+template<typename... Ts>
+std::string CSVReceiverT<Ts...>::formatColumns(const std::vector<std::string>& cols)
 {
     std::ostringstream oss;
-    for (size_t i = 0; i < cols.size(); ++i) 
+    for (size_t i = 0; i < cols.size(); ++i)
     {
         if (i > 0) oss << ",";
-	        oss << cols[i];
+        oss << cols[i];
     }
-
     return oss.str();
 }
 
-CSVReceiver::~CSVReceiver() 
+template<typename... Ts>
+void CSVReceiverT<Ts...>::writeRow(Ts... args)
 {
-    if (csvFile.is_open()) 
+    if (!csvFile.is_open()) return;
+
+    std::ostringstream oss;
+    ((oss << args << ","), ...);
+    std::string row = oss.str();
+    if (!row.empty())
+        row.pop_back(); 
+
+    csvFile << row << "\n";
+}
+
+template<typename... Ts>
+CSVReceiverT<Ts...>::~CSVReceiverT()
+{
+    if (csvFile.is_open())
     {
         csvFile.close();
     }
 }
+
+template class CSVReceiverT<std::string, std::string, std::string, std::string, std::string>;

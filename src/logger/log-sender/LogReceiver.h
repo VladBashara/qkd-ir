@@ -69,25 +69,23 @@ public:
 /**
  * @brief Класс логирования в CSV-файл.
  */
-class CSVReceiver : public LogReceiver 
+template<typename... Ts>
+class CSVReceiverT : public LogReceiver
 {
 private:
     std::ofstream csvFile;
     std::string filename;
     std::vector<std::string> columns;
-    size_t columnIndex;
 
     void verifyOrInitializeFile();
 
     std::string formatColumns(const std::vector<std::string>& cols);
 
 public:
-    CSVReceiver(const std::string& filename, const std::vector<std::string>& columnNames);
-
-    void operator<<(const std::string& msg) override;
-
-    ~CSVReceiver();
-    
+    CSVReceiverT(const std::string& filename, const std::vector<std::string>& columnNames);
+    void writeRow(Ts... args);
+    void operator<<(const std::string& msg) override {} 
+    ~CSVReceiverT();
 };
 
 #endif // LOG_RECEIVER_H

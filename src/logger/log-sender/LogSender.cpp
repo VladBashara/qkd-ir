@@ -70,11 +70,12 @@ void LogSender::addNetworkReceiver(LogLevel level, const std::string& ip, int po
     receivers[level].push_back(std::make_shared<NetworkReceiver>(ip, port));
 }
 
+template<typename... Ts>
 void LogSender::addCSVReceiver(LogLevel level, const std::string& filename, const std::vector<std::string>& columns)
 {
-    receivers[level].push_back(std::make_shared<CSVReceiver>(filename, columns));
+	auto receiver = std::make_shared<CSVReceiverT<Ts...>>(filename, columns);
+    csvReceivers.emplace_back(level, receiver);
 }
-
 
 void LogSender::processQueue()
 {

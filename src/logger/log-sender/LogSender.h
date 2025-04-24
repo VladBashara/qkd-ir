@@ -70,6 +70,9 @@ public:
     void addFileReceiver(LogLevel level, const std::string& filename);
     void addNetworkReceiver(LogLevel level, const std::string& ip, int port);
     void addCSVReceiver(LogLevel level, const std::string& filename, const std::vector<std::string>& columns);
+    template<typename... Ts>
+	void addCSVReceiver(LogLevel level, const std::string& filename, const std::vector<std::string>& columns);
+
     
 /// Запрещает копирование и перемещение
 	LogSender(const LogSender&) = delete;
@@ -90,6 +93,8 @@ private:
     std::condition_variable cv; /**< Условная переменна для управления потоком отправки */
     std::thread senderThread; /**< Поток для асинхронной отправки сообщений */
     std::atomic<bool> stopFlag; /**< Флаг остановки потока отправки */
+    
+    std::map<LogLevel, std::vector<std::shared_ptr<LogReceiver>>> receivers;
     
     std::map<LogLevel, std::vector<std::shared_ptr<LogReceiver>>> receivers;
 };

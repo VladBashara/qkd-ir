@@ -14,7 +14,6 @@ struct GeneticMatrix {
 
 void generateLogs_console(LogSender &sender, std::string severity, std::string source, std::string messageType, std::string message);
 
-// template<typename T>
 void generateLogs_csv(CSVReceiverT<std::string, std::string, std::string, std::string, std::string> &csv, std::string severity, std::string source, std::string messageType, std::string message);
 
 std::multimap<size_t, std::multimap<IntersectionMetric, GeneticMatrix, std::greater<IntersectionMetric>>> genetic_algo(const size_t popul_size, const double P_m, const std::string mat_path, const size_t Z,

@@ -69,7 +69,7 @@ std::multimap<IntersectionMetric, GeneticMatrix, std::greater<IntersectionMetric
             IntersectionMetric obj_func = busc_bm.find_intersection(QBER_range.first, QBER_range.second, 10e-3, 0.001, LDPC_algo::NMS, false);
 
             results_sync.lock();
-            generateLogs_console(logger, "DATA", "genetic_optimizer", "calculation_obj_func", "obj_func was calculated for " + gen_matrix.matrix_id);
+            generateLogs_console(logger, "INFO", "genetic_optimizer", "calculation_obj_func", "obj_func was calculated for " + gen_matrix.matrix_id);
             results_map.insert(std::pair(obj_func, gen_matrix));
             results_sync.unlock();
         });
@@ -179,11 +179,6 @@ std::multimap<size_t, std::multimap<IntersectionMetric, GeneticMatrix, std::grea
         auto rng = std::default_random_engine{};
         rng.seed(get_seed());
         std::ranges::shuffle(population_values_vec, rng);
-        // std::cout << "NEXT LINE DEBUG POPULAT SHUFFLE" << std::endl;
-        // for (auto elem : population_values_vec) {
-        //     std::cout << elem.matrix_id << " ";
-        // }
-        // std::cout << std::endl;
 
         // crossover
         for (size_t idx{0}; idx < population_values_vec.size(); idx += 2) {
@@ -232,8 +227,3 @@ std::multimap<size_t, std::multimap<IntersectionMetric, GeneticMatrix, std::grea
 
     return population_per_epoch_map;
 }
-
-// template std::multimap<size_t, std::multimap<IntersectionMetric, GeneticMatrix, std::greater<IntersectionMetric>>>
-// genetic_algo<CSVReceiverT<std::string, std::string, std::string, std::string, std::string>>(size_t popul_size, double P_m, std::string mat_path, size_t Z,
-//     std::pair<double, double> QBER_range, size_t mu, size_t iter_amount, const LogSender& logger, const CSVReceiverT<std::string, std::string, std::string, std::string, std::string>& csv
-// );

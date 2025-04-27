@@ -14,19 +14,35 @@
 #define CMAKE_BINARY_DIR ""
 #endif
 
-void print_parameters(size_t popul_size, double P_m, std::string mat_path, size_t Z, std::pair<double, double> QBER_range, double QBER_step, size_t mu, size_t iter_amount) {
-    std::cout << "Launch parameters: " << std::endl;
-    std::cout << "size_t popul_size = " << popul_size << ";" << std::endl;
-    std::cout << "double P_m = " << P_m << ";" << std::endl;
+void print_parameters(size_t popul_size, double P_m, std::string mat_path, size_t Z, std::pair<double, double> QBER_range, double QBER_step, size_t mu, size_t iter_amount, LogSender &logger) {
+    // std::cout << "Launch parameters: " << std::endl;
+    // std::cout << "size_t popul_size = " << popul_size << ";" << std::endl;
+    // std::cout << "double P_m = " << P_m << ";" << std::endl;
+    // size_t pos = std::string(CMAKE_BINARY_DIR).size();
+    // std::cout << "std::string mat_path = CMAKE_BINARY_DIR + std::string(\"" << mat_path.substr(pos) << "\");" << std::endl;
+    // std::cout << "size_t Z = " << Z << ";" << std::endl;
+    // std::cout << "std::pair<double, double> QBER_range = {" << QBER_range.first << ", " << QBER_range.second << "};" << std::endl;
+    // std::cout << "double QBER_step = " << QBER_step << ";" << std::endl;
+    // std::cout << "size_t mu = " << mu << ";" << std::endl;
+    // std::cout << "size_t iter_amount = " << iter_amount << ";" << std::endl;
+    // std::cout << std::string(7, '\n');
+    // std::cout.flush();
+
+    std::stringstream ss;
+    ss << "Launch parameters: " << std::endl;
+    ss << "size_t popul_size = " << popul_size << ";" << std::endl;
+    ss << "double P_m = " << P_m << ";" << std::endl;
     size_t pos = std::string(CMAKE_BINARY_DIR).size();
-    std::cout << "std::string mat_path = CMAKE_BINARY_DIR + std::string(\"" << mat_path.substr(pos) << "\");" << std::endl;
-    std::cout << "size_t Z = " << Z << ";" << std::endl;
-    std::cout << "std::pair<double, double> QBER_range = {" << QBER_range.first << ", " << QBER_range.second << "};" << std::endl;
-    std::cout << "double QBER_step = " << QBER_step << ";" << std::endl;
-    std::cout << "size_t mu = " << mu << ";" << std::endl;
-    std::cout << "size_t iter_amount = " << iter_amount << ";" << std::endl;
-    std::cout << std::string(7, '\n');
-    std::cout.flush();
+    ss << "std::string mat_path = CMAKE_BINARY_DIR + std::string(\"" << mat_path.substr(pos) << "\");" << std::endl;
+    ss << "size_t Z = " << Z << ";" << std::endl;
+    ss << "std::pair<double, double> QBER_range = {" << QBER_range.first << ", " << QBER_range.second << "};" << std::endl;
+    ss << "double QBER_step = " << QBER_step << ";" << std::endl;
+    ss << "size_t mu = " << mu << ";" << std::endl;
+    ss << "size_t iter_amount = " << iter_amount << ";" << std::endl;
+    ss << std::string(7, '\n');
+    ss.flush();
+
+    generateLogs_console(logger, "INFO", "genetic_optimizer", "population_generation", ss.str());
 }
 
 int main(int argc, char* argv[]) {
@@ -35,15 +51,17 @@ int main(int argc, char* argv[]) {
     size_t popul_size = 3;
     double P_m = 0.3;
     std::string mat_path = CMAKE_BINARY_DIR + std::string("/data/BG1.alist"); // 46 rows / 68 cols = 0.32 code speed
-    size_t Z = 3;
+    size_t Z = 2;
     std::pair<double, double> QBER_range = {0.0, 0.2};
-    double QBER_step = 0.01;
+    double QBER_step = 0.09;
     size_t mu = 7;
-    size_t iter_amount = 2;
+    size_t iter_amount = 1;
 
-    print_parameters(popul_size, P_m, mat_path, Z, QBER_range, QBER_step, mu, iter_amount);
-    
     LogSender logger;
+    logger.addConsoleReceiver(LogLevel::ALL);
+
+
+    print_parameters(popul_size, P_m, mat_path, Z, QBER_range, QBER_step, mu, iter_amount, logger);
 
 	CSVReceiverT<std::string, std::string, std::string, std::string, std::string> csv(
 		"logs1.csv", {"timestamp", "level", "source", "type", "message"}
@@ -63,10 +81,15 @@ int main(int argc, char* argv[]) {
         }
     }
     
-    std::cout << mat_stem << " metric: " << origin_mat_metric << std::endl;
+    // std::cout << mat_stem << " metric: " << origin_mat_metric << std::endl;
+    generateLogs_csv(csv, "DATA", "genetic_optimizer", "plain_results", mat_stem + " metric: " + std::to_string(origin_mat_metric));
     benchmarks::BSChannellWynersEC origin_busc_bm{origin_mat_matrix};
     Result origin_obj_func{origin_busc_bm.run(QBER_range.first, QBER_range.second, QBER_step, LDPC_algo::NMS, false)};
-    std::cout << origin_obj_func << std::endl;
+    // std::cout << origin_obj_func << std::endl;
+    std::stringstream ss;
+    ss << origin_obj_func;
+    generateLogs_csv(csv, "DATA", "genetic_optimizer", "plain_results", ss.str());
+    ss.str("");
 
 
     IntersectionMetric best_metric = some_res.begin()->second.begin()->first;
@@ -80,10 +103,13 @@ int main(int argc, char* argv[]) {
 
     }
 
-    std::cout << "All epochs best metric: " << best_metric << std::endl;
+    // std::cout << "All epochs best metric: " << best_metric << std::endl;
+    generateLogs_csv(csv, "DATA", "genetic_optimizer", "plain_results", "All epochs best metric: " + std::to_string(best_metric));
     benchmarks::BSChannellWynersEC best_busc_bm{best_matrix};
     Result best_obj_func{best_busc_bm.run(QBER_range.first, QBER_range.second, QBER_step, LDPC_algo::NMS, false)};
-    std::cout << best_obj_func << std::endl;
+    // std::cout << best_obj_func << std::endl;
+    ss << best_obj_func;
+    generateLogs_csv(csv, "DATA", "genetic_optimizer", "plain_results", ss.str());
 
     // dump_matrix(best_matrix, CMAKE_BINARY_DIR + std::string("/experiments/data/dumped_best_matrix.alist"));
 
@@ -95,9 +121,11 @@ int main(int argc, char* argv[]) {
     auto minutes = std::chrono::duration_cast<std::chrono::minutes>(duration);
     duration -= minutes;
     auto seconds = std::chrono::duration_cast<std::chrono::seconds>(duration);
-    std::cout << std::string(2, '\n');
-    std::cout << "Running time: " << hours.count() << "h " << minutes.count() << "m " << seconds.count() << "s" << std::endl;
-    std::cout.flush();
+    // std::cout << std::string(2, '\n');
+    // std::cout << "Running time: " << hours.count() << "h " << minutes.count() << "m " << seconds.count() << "s" << std::endl;
+    // std::cout.flush();
+    generateLogs_csv(csv, "INFO", "genetic_optimizer", "exec_time",
+    "Running time: " + std::to_string(hours.count()) + "h " + std::to_string(minutes.count()) + "m " + std::to_string(seconds.count()) + "s");
 
     return 0;
 }

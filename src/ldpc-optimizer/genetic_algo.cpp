@@ -18,13 +18,18 @@
 #include <chrono>
 #include <taskflow/taskflow.hpp>
 
-template<typename CSV>
-void generateLogs(LogSender &sender, CSV& csv, std::string severity, std::string source, std::string messageType, std::string message) {
+void generateLogs_console(LogSender &sender, std::string severity, std::string source, std::string messageType, std::string message) {
     
     std::string timestamp = getCurrentTimeStr();
     std::string logMessage = "[" + timestamp + "] " + severity + " " + source + "," + messageType + ": " + message;
 
     sender << std::pair{LogLevel::ALL, logMessage};
+}
+
+void generateLogs_csv(CSVReceiverT<std::string, std::string, std::string, std::string, std::string> &csv, std::string severity, std::string source, std::string messageType, std::string message) {
+    
+    std::string timestamp = getCurrentTimeStr();
+    std::string logMessage = "[" + timestamp + "] " + severity + " " + source + "," + messageType + ": " + message;
     
     csv.writeRow(timestamp, severity, source, messageType, message);
 }
@@ -35,7 +40,7 @@ size_t get_seed() {
 
 std::multimap<IntersectionMetric, GeneticMatrix, std::greater<IntersectionMetric>> calculate_obj_func(
     const BG_type bg_type, const std::multimap<IntersectionMetric, GeneticMatrix, std::greater<IntersectionMetric>> &population_map, const std::pair<double, double> QBER_range,
-    const size_t Z) {
+    const size_t Z, LogSender &logger) {
 
     std::multimap<IntersectionMetric, GeneticMatrix, std::greater<IntersectionMetric>> results_map;
 
@@ -64,6 +69,7 @@ std::multimap<IntersectionMetric, GeneticMatrix, std::greater<IntersectionMetric
             IntersectionMetric obj_func = busc_bm.find_intersection(QBER_range.first, QBER_range.second, 10e-3, 0.001, LDPC_algo::NMS, false);
 
             results_sync.lock();
+            generateLogs_console(logger, "DATA", "genetic_optimizer", "calculation_obj_func", "obj_func was calculated for " + gen_matrix.matrix_id);
             results_map.insert(std::pair(obj_func, gen_matrix));
             results_sync.unlock();
         });
@@ -74,70 +80,95 @@ std::multimap<IntersectionMetric, GeneticMatrix, std::greater<IntersectionMetric
     return results_map;
 }
 
-template<typename CSV>
 std::multimap<size_t, std::multimap<IntersectionMetric, GeneticMatrix, std::greater<IntersectionMetric>>> genetic_algo(const size_t popul_size, const double P_m, const std::string mat_path, const size_t Z,
-                  const std::pair<double, double> QBER_range, const size_t mu, const size_t iter_amount, const LogSender &logger, const CSV& csv) {
+                  const std::pair<double, double> QBER_range, const size_t mu, const size_t iter_amount, LogSender &logger, CSVReceiverT<std::string, std::string, std::string, std::string, std::string> &csv) {
     
+    generateLogs_console(logger, "INFO", "genetic_optimizer", "validation_state", "Start validation"); 
+    
+    std::string err_msg;
     if (popul_size <= 2) {
-        throw std::runtime_error("popul_size <= 2 : " + std::to_string(popul_size));
+        err_msg = "popul_size <= 2 : " + std::to_string(popul_size) + " <= 2";
+        generateLogs_console(logger, "ERROR", "genetic_optimizer", "validation_state", "runtime_error: "+err_msg);
+        throw std::runtime_error(err_msg);
+    } else {
+        generateLogs_console(logger, "INFO", "genetic_optimizer", "validation_state", "popul_size > 2 : " + std::to_string(popul_size) + " > 2");
     }
     if (P_m < 0 or P_m > 1) {
-        throw std::runtime_error("P_m < 0 or P_m > 1 : " + std::to_string(P_m));
+        err_msg = "P_m < 0 or P_m > 1 : " + std::to_string(P_m) + "< 0 or " + std::to_string(P_m) + " > 1";
+        generateLogs_console(logger, "ERROR", "genetic_optimizer", "validation_state", "runtime_error: "+err_msg);
+        throw std::runtime_error(err_msg);
+    } else {
+        generateLogs_console(logger, "INFO", "genetic_optimizer", "validation_state", "0 <= P_m <= 1 : 0 <= " + std::to_string(P_m) + " <= 1");
     }
     if (iter_amount == 0) {
-        throw std::runtime_error("iter_amount == 0");
+        err_msg = "iter_amount == 0 : " + std::to_string(iter_amount) + " == 0";
+        generateLogs_console(logger, "ERROR", "genetic_optimizer", "validation_state", "runtime_error: "+err_msg);
+        throw std::runtime_error(err_msg);
+    } else {
+        generateLogs_console(logger, "INFO", "genetic_optimizer", "validation_state", "iter_amount != 0 : " + std::to_string(iter_amount) + " != 0");
     }
 
+    generateLogs_console(logger, "INFO", "genetic_optimizer", "validation_state", "End validation");
 
     std::multimap<size_t, std::multimap<IntersectionMetric, GeneticMatrix, std::greater<IntersectionMetric>>> population_per_epoch_map;
 
     // load matrix
     GeneticMatrix mat = {load_matrix_from_alist(mat_path), "", ""};
+    generateLogs_console(logger, "INFO", "genetic_optimizer", "matrix_loading", mat_path+" was loaded succesfully");
 
     BG_type bg_type;
     auto mat_stem = std::filesystem::path(mat_path).stem();
     if (mat_stem == "BG1") {
         bg_type = BG_type::BG1;
+        generateLogs_console(logger, "INFO", "genetic_optimizer", "matrix_loading", "Matrix`s BG_type == BG1");
     } else if (mat_stem == "BG2") {
         bg_type = BG_type::BG2;
+        generateLogs_console(logger, "INFO", "genetic_optimizer", "matrix_loading", "Matrix`s BG_type == BG2");
     } else {
         bg_type = BG_type::NOT_5G;
+        generateLogs_console(logger, "INFO", "genetic_optimizer", "matrix_loading", "Matrix`s BG_type == NOT_5G");
     }
 
     // generate population with adding some mutations on expanded matrix
     constexpr IntersectionMetric DEFAULT_KEY = -1.0;
 
+    generateLogs_console(logger, "INFO", "genetic_optimizer", "population_generation", "Start generating poopulation with size "+std::to_string(popul_size));
     std::multimap<IntersectionMetric, GeneticMatrix, std::greater<IntersectionMetric>> population_map;
     population_map.insert({DEFAULT_KEY, {mat.matrix, mat_stem.generic_string(), ""}});
+    generateLogs_console(logger, "INFO", "genetic_optimizer", "population_generation", "Origin matrix was inserted into population");
     for (size_t i{1}; i < popul_size; i++) {
         population_map.insert({DEFAULT_KEY, {make_random_mutation(bg_type, mu, get_seed(), mat.matrix), "", ""}});
+        generateLogs_console(logger, "INFO", "genetic_optimizer", "population_generation", std::to_string(i)+"th mutated matrix was inserted into population");
     }
+    generateLogs_console(logger, "INFO", "genetic_optimizer", "population_generation", "End generating poopulation with size "+std::to_string(popul_size));
 
 
     for (size_t epoch{1}; epoch < iter_amount + 1; epoch++) {
-
-        // calculate objective function for all individuals
-        population_map = calculate_obj_func(bg_type, population_map, QBER_range, Z);
-
+        
         size_t elem_index{1};
         for (auto &elem : population_map) {
             elem.second.matrix_id = std::to_string(epoch) + "." + std::to_string(elem_index++);
         }
 
+        // calculate objective function for all individuals
+        population_map = calculate_obj_func(bg_type, population_map, QBER_range, Z, logger);
+
         // print results for epoch
-        std::cout << "EPOCH " << epoch << " - best metric: " << population_map.begin()->first << std::endl;
+        std::stringstream ss;
+        ss << "EPOCH " << epoch << " - best metric: " << population_map.begin()->first << std::endl;
         for (auto individ : population_map) {
-            std::cout << individ.second.matrix_id << " metric " << individ.first << " " << individ.second.history << std::endl;
+            ss << individ.second.matrix_id << " metric " << individ.first << " " << individ.second.history << std::endl;
         }
-        std::cout << std::endl;
-        std::cout.flush();
+        generateLogs_csv(csv, "DATA", "genetic_optimizer", "results_printing", ss.str());
 
         // remember popualtion per epoch
         population_per_epoch_map.insert(std::pair(epoch, population_map));
+        generateLogs_console(logger, "INFO", "genetic_optimizer", "results_saved", "Best metric was saved in memory");
 
         // half best individuals stays, others - throws away
         auto iter_middle = std::next(population_map.begin(), ((population_map.size()+1) / 2));
         population_map.erase(iter_middle, population_map.end());
+        generateLogs_console(logger, "INFO", "genetic_optimizer", "population_halfing", "Last half was erased");
         
         // get population values and shuffle it
         std::vector<GeneticMatrix> population_values_vec;
@@ -175,6 +206,7 @@ std::multimap<size_t, std::multimap<IntersectionMetric, GeneticMatrix, std::grea
             population_map.insert({DEFAULT_KEY, {mat_1, "(" + first_ind.matrix_id + " x " + second_ind.matrix_id + ")", ""}});
             population_map.insert({DEFAULT_KEY, {mat_2, "(" + second_ind.matrix_id + " x " + first_ind.matrix_id + ")", ""}});
         }
+        generateLogs_console(logger, "INFO", "genetic_optimizer", "population_crossovering", "Population was crossovered");
 
         // add mutations for population
         int seed_inc{1};
@@ -193,6 +225,7 @@ std::multimap<size_t, std::multimap<IntersectionMetric, GeneticMatrix, std::grea
 
             seed_inc++;
         }
+        generateLogs_console(logger, "INFO", "genetic_optimizer", "population_mutating", "Population was mutated");
 
         population_map = population_map_buf;
     }
@@ -200,7 +233,7 @@ std::multimap<size_t, std::multimap<IntersectionMetric, GeneticMatrix, std::grea
     return population_per_epoch_map;
 }
 
-template std::multimap<size_t, std::multimap<IntersectionMetric, GeneticMatrix, std::greater<IntersectionMetric>>>
-genetic_algo<CSVReceiverT<std::string, std::string, std::string, std::string, std::string>>(size_t popul_size, double P_m, std::string mat_path, size_t Z,
-    std::pair<double, double> QBER_range, size_t mu, size_t iter_amount, const LogSender& logger, const CSVReceiverT<std::string, std::string, std::string, std::string, std::string>& csv
-);
+// template std::multimap<size_t, std::multimap<IntersectionMetric, GeneticMatrix, std::greater<IntersectionMetric>>>
+// genetic_algo<CSVReceiverT<std::string, std::string, std::string, std::string, std::string>>(size_t popul_size, double P_m, std::string mat_path, size_t Z,
+//     std::pair<double, double> QBER_range, size_t mu, size_t iter_amount, const LogSender& logger, const CSVReceiverT<std::string, std::string, std::string, std::string, std::string>& csv
+// );

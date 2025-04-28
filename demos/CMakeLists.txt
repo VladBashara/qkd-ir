@@ -9,7 +9,9 @@ target_link_libraries(opt-main-mt PUBLIC parallel-framework-mt)
 
 add_executable(opt-main-genetic opt-main-genetic.cpp)
 target_link_libraries(opt-main-genetic PUBLIC genetic_algo cxxopts)
-add_compile_definitions(CMAKE_BINARY_DIR="${CMAKE_BINARY_DIR}")
+
+add_executable(opt-main-greedy opt-main-greedy.cpp)
+target_link_libraries(opt-main-greedy PUBLIC parallel-framework-mt cxxopts log-sender)
 
 add_executable(logger-main logger-main.cpp)
 target_link_libraries(logger-main PUBLIC log-sender)

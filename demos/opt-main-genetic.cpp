@@ -15,7 +15,42 @@
 #define CMAKE_BINARY_DIR ""
 #endif
 
-void print_parameters(size_t popul_size, double P_m, std::string input_mat_path, std::string output_mat_path, std::string log_path, size_t Z, std::pair<double, double> QBER_range, double QBER_step, size_t mu, size_t iter_amount, LogSender &logger) {
+
+void validate_params(size_t popul_size, double P_m, std::string input_mat_path, std::string output_mat_path,
+    std::string log_path, size_t Z, std::pair<double, double> QBER_range, double QBER_step, size_t mu, size_t iter_amount, LogSender &logger) {
+    
+    std::string err_msg;
+    std::string log_msg;
+    if (input_mat_path == output_mat_path) {
+        err_msg = "input_mat_path == output_mat_path : " + input_mat_path + " == " + output_mat_path;
+        generateLogs_console(logger, "ERROR", "genetic_optimizer", "validation_params", "runtime_error: "+err_msg);
+        throw std::runtime_error(err_msg);
+    } else {
+        log_msg = "input_mat_path != output_mat_path : " + input_mat_path + " != " + output_mat_path;
+        generateLogs_console(logger, "INFO", "genetic_optimizer", "validation_params", log_msg);
+    }
+
+    if (log_path == input_mat_path) {
+        err_msg = "log_path == input_mat_path : " + log_path + " == " + input_mat_path;
+        generateLogs_console(logger, "ERROR", "genetic_optimizer", "validation_params", "runtime_error: "+err_msg);
+        throw std::runtime_error(err_msg);
+    } else {
+        log_msg = "log_path != input_mat_path : " + log_path + " != " + input_mat_path;
+        generateLogs_console(logger, "INFO", "genetic_optimizer", "validation_params", log_msg);
+    }
+
+    if (log_path == output_mat_path) {
+        err_msg = "log_path == output_mat_path : " + log_path + " == " + output_mat_path;
+        generateLogs_console(logger, "ERROR", "genetic_optimizer", "validation_params", "runtime_error: "+err_msg);
+        throw std::runtime_error(err_msg);
+    } else {
+        log_msg = "log_path != output_mat_path : " + log_path + " != " + output_mat_path;
+        generateLogs_console(logger, "INFO", "genetic_optimizer", "validation_params", log_msg);
+    }
+}
+
+void print_parameters(size_t popul_size, double P_m, std::string input_mat_path, std::string output_mat_path,
+            std::string log_path, size_t Z, std::pair<double, double> QBER_range, double QBER_step, size_t mu, size_t iter_amount, LogSender &logger) {
 
     std::stringstream ss;
     ss << "Launch parameters: " << std::endl;
@@ -32,7 +67,7 @@ void print_parameters(size_t popul_size, double P_m, std::string input_mat_path,
     ss << std::string(7, '\n');
     ss.flush();
 
-    generateLogs_console(logger, "INFO", "genetic_optimizer", "population_generation", ss.str());
+    generateLogs_console(logger, "INFO", "genetic_optimizer", "launch_params", ss.str());
 }
 
 int main(int argc, char* argv[]) {
@@ -73,19 +108,17 @@ int main(int argc, char* argv[]) {
         size_t mu = parsed_opts["mu"].as<size_t>();
         size_t iter_amount = parsed_opts["i"].as<size_t>();
 
-        if (input_mat_path == output_mat_path)
-            throw std::runtime_error("Input and output matrixes paths are the same (" + input_mat_path + ")");
-
-            
         LogSender logger;
         logger.addConsoleReceiver(LogLevel::ALL);
-
-        
-        print_parameters(popul_size, P_m, input_mat_path, output_mat_path, log_path, Z, QBER_range, QBER_step, mu, iter_amount, logger);
-        
         CSVReceiverT<std::string, std::string, std::string, std::string, std::string> csv(
             log_path, {"timestamp", "level", "source", "type", "message"}
         );
+
+
+        validate_params(popul_size, P_m, input_mat_path, output_mat_path, log_path, Z, QBER_range, QBER_step, mu, iter_amount, logger);
+        
+        print_parameters(popul_size, P_m, input_mat_path, output_mat_path, log_path, Z, QBER_range, QBER_step, mu, iter_amount, logger);
+        
 
         std::multimap<size_t, std::multimap<IntersectionMetric, GeneticMatrix, std::greater<IntersectionMetric>>> some_res = genetic_algo(popul_size, P_m, input_mat_path, Z, QBER_range, mu, iter_amount, logger, csv);
 
@@ -130,7 +163,7 @@ int main(int argc, char* argv[]) {
         generateLogs_console(logger, "DATA", "genetic_optimizer", "plain_results", ss.str());
 
         dump_matrix(best_matrix, output_mat_path);
-
+        generateLogs_console(logger, "INFO", "genetic_optimizer", "matrix_dumping", "Matrix was dumped");
 
         std::chrono::steady_clock::time_point end_time = std::chrono::steady_clock::now();
 

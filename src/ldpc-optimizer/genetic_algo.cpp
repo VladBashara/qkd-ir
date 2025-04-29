@@ -26,7 +26,8 @@ void generateLogs_console(LogSender &sender, std::string severity, std::string s
     sender << std::pair{LogLevel::ALL, logMessage};
 }
 
-void generateLogs_csv(CSVReceiverT<std::string, std::string, std::string, std::string, std::string> &csv, std::string severity, std::string source, std::string messageType, std::string message) {
+void generateLogs_csv(CSVReceiverT<std::string, std::string, std::string, std::string, std::string> &csv,
+                        std::string severity, std::string source, std::string messageType, std::string message) {
     
     std::string timestamp = getCurrentTimeStr();
     std::string logMessage = "[" + timestamp + "] " + severity + " " + source + "," + messageType + ": " + message;
@@ -39,8 +40,8 @@ size_t get_seed() {
 }
 
 std::multimap<IntersectionMetric, GeneticMatrix, std::greater<IntersectionMetric>> calculate_obj_func(
-    const BG_type bg_type, const std::multimap<IntersectionMetric, GeneticMatrix, std::greater<IntersectionMetric>> &population_map, const std::pair<double, double> QBER_range,
-    const size_t Z, LogSender &logger) {
+    const BG_type bg_type, const std::multimap<IntersectionMetric, GeneticMatrix, std::greater<IntersectionMetric>> &population_map, 
+    const std::pair<double, double> QBER_range, const size_t Z, LogSender &logger) {
 
     std::multimap<IntersectionMetric, GeneticMatrix, std::greater<IntersectionMetric>> results_map;
 

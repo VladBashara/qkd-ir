@@ -3,6 +3,7 @@
 void ConsoleReceiver::operator<<(const std::string& msg)
 {
     std::cout << msg << std::endl;
+    std::cout.flush();
 }
 
 FileReceiver::FileReceiver(const std::string& filename)

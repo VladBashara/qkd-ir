@@ -119,15 +119,15 @@ void validate_params(std::string input_mat_path, std::string output_mat_path, st
 }
 
 void print_matrix_as_triplets(Eigen::SparseMatrix<GF2, Eigen::RowMajor> const& matrix, LogSender &logger) {
-	// std::cout << "ROW\tCOL\tVAL\n";
+	
 	std::stringstream ss;
 	generateLogs_console(logger, "DATA", "greedy_optimizer", "results_printing", "ROW\tCOL\tVAL");
 	for (int k=0; k < matrix.outerSize(); k++) {
 		for (Eigen::SparseMatrix<GF2, Eigen::RowMajor>::InnerIterator it(matrix, k); it; ++it) {			
 			ss << it.row() << "\t" << it.col() << "\t" << it.value() << std::endl;
-			generateLogs_console(logger, "DATA", "greedy_optimizer", "results_printing", ss.str());
 		}
 	}
+	generateLogs_console(logger, "DATA", "greedy_optimizer", "results_printing", ss.str());
 }
 
 void print_parameters(std::string input_mat_path, std::string output_mat_path, std::string log_path, size_t Z,

@@ -64,8 +64,7 @@ std::multimap<IntersectionMetric, GeneticMatrix, std::greater<IntersectionMetric
             expanded_mat = {shift_eyes(expanded_mat.matrix, Z, bg_type, shift_randomness::COMBINE), gen_matrix.history, gen_matrix.matrix_id};
             expanded_mat.matrix.makeCompressed();
 
-            // benchmarks::BSChannellWynersEC busc_bm{expanded_mat.matrix};
-            benchmarks::BUSChannellWynersEC busc_bm{expanded_mat.matrix, {0.005, 0.01, 0.02, 0.04}, {-1, -1}, true};
+            benchmarks::BUSChannellWynersEC busc_bm{expanded_mat.matrix, {0.005, 0.01, 0.02, 0.04}, {-1, -1}, false};
 
             IntersectionMetric obj_func = busc_bm.find_intersection(QBER_range.first, QBER_range.second, 10e-3, 0.001, LDPC_algo::NMS, false);
 

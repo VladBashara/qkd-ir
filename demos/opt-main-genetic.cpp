@@ -135,7 +135,7 @@ int main(int argc, char* argv[]) {
         }
         
         generateLogs_console(logger, "DATA", "genetic_optimizer", "plain_results", mat_stem + " metric: " + std::to_string(origin_mat_metric));
-        benchmarks::BSChannellWynersEC origin_busc_bm{origin_mat_matrix};
+        benchmarks::BUSChannellWynersEC origin_busc_bm{origin_mat_matrix, {0.005, 0.01, 0.02, 0.04}, {-1, -1}, false};
         Result origin_obj_func{origin_busc_bm.run(QBER_range.first, QBER_range.second, QBER_step, LDPC_algo::NMS, false)};
         
         std::stringstream ss;
@@ -156,11 +156,12 @@ int main(int argc, char* argv[]) {
         }
         
         generateLogs_console(logger, "DATA", "genetic_optimizer", "plain_results", "All epochs best metric: " + std::to_string(best_metric));
-        benchmarks::BSChannellWynersEC best_busc_bm{best_matrix};
+        benchmarks::BUSChannellWynersEC best_busc_bm{best_matrix, {0.005, 0.01, 0.02, 0.04}, {-1, -1}, false};
         Result best_obj_func{best_busc_bm.run(QBER_range.first, QBER_range.second, QBER_step, LDPC_algo::NMS, false)};
         
         ss << best_obj_func;
         generateLogs_console(logger, "DATA", "genetic_optimizer", "plain_results", ss.str());
+        ss.str("");
 
         dump_matrix(best_matrix, output_mat_path);
         generateLogs_console(logger, "INFO", "genetic_optimizer", "matrix_dumping", "Matrix was dumped");

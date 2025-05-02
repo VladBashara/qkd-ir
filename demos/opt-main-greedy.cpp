@@ -230,7 +230,15 @@ int main(int argc, char *argv[]) {
 	// Вычисление начального значения
 	Eigen::SparseMatrix<GF2, Eigen::RowMajor> shifted_H = shift_eyes(H, Z, bg_type, shift_randomness::NO_RANDOM);
 	shifted_H.makeCompressed();
-	benchmarks::BUSChannellWynersEC busc_bm{shifted_H, {0.005, 0.01, 0.02, 0.04}, {-1, -1}, true};
+	benchmarks::BUSChannellWynersEC busc_bm{shifted_H, {0.005, 0.01, 0.02, 0.04}, {-1, -1}, false};
+	
+	
+	std::stringstream ss;
+	Result origin_obj_func{busc_bm.run(QBER_range.first, QBER_range.second, QBER_step, LDPC_algo::NMS, false)};
+	ss << origin_obj_func;
+	generateLogs_console(logger, "DATA", "greedy_optimizer", "plain_results", ss.str());
+	ss.str("");
+
 	IntersectionMetric current_res{ busc_bm.find_intersection(QBER_range.first, QBER_range.second, 10e-3, 0.001, LDPC_algo::NMS, false) };
 	generateLogs_csv(csv, "DATA", "greedy_optimizer", "results_printing", mat_stem.generic_string() + " metric " + std::to_string(current_res));
 
@@ -272,7 +280,7 @@ int main(int argc, char *argv[]) {
 
 						Eigen::SparseMatrix<GF2, Eigen::RowMajor> shifted_H_local = shift_eyes(H_local, Z, bg_type, shift_randomness::COMBINE);
 						shifted_H_local.makeCompressed();
-						benchmarks::BUSChannellWynersEC busc_bm{shifted_H_local, {0.005, 0.01, 0.02, 0.04}, {-1, -1}, true};
+						benchmarks::BUSChannellWynersEC busc_bm{shifted_H_local, {0.005, 0.01, 0.02, 0.04}, {-1, -1}, false};
 
 						IntersectionMetric res{ busc_bm.find_intersection(QBER_range.first, QBER_range.second, 10e-3, 0.001, LDPC_algo::NMS, false) };
 						
@@ -300,6 +308,12 @@ int main(int argc, char *argv[]) {
 				}
 			} // for (size_t iter_number{0}; iter_number < ITERATIONS; ++iter_number)
 		} // for (size_t epoch_number{0}; epoch_number < EPOCHS; ++epoch_number)
+		
+		benchmarks::BUSChannellWynersEC best_busc_bm{bg, {0.005, 0.01, 0.02, 0.04}, {-1, -1}, false};
+        Result best_obj_func{best_busc_bm.run(QBER_range.first, QBER_range.second, QBER_step, LDPC_algo::NMS, false)};
+        ss << best_obj_func;
+        generateLogs_console(logger, "DATA", "greedy_optimizer", "plain_results", ss.str());
+		ss.str("");
 
 		
 		dump_matrix(bg, output_mat_path);

@@ -155,7 +155,7 @@ void CSVReceiverT<Ts...>::writeRow(Ts... args)
     if (!row.empty())
         row.pop_back(); 
 
-    csvFile << row << "\n";
+    csvFile << row << std::endl;
 }
 
 template<typename... Ts>

@@ -309,14 +309,19 @@ int main(int argc, char *argv[]) {
 			} // for (size_t iter_number{0}; iter_number < ITERATIONS; ++iter_number)
 		} // for (size_t epoch_number{0}; epoch_number < EPOCHS; ++epoch_number)
 		
-		benchmarks::BUSChannellWynersEC best_busc_bm{bg, {0.005, 0.01, 0.02, 0.04}, {-1, -1}, true};
+		Eigen::SparseMatrix<GF2, Eigen::RowMajor> best_H = enhance_from_base(bg, Z);
+        best_H.makeCompressed();
+        Eigen::SparseMatrix<GF2, Eigen::RowMajor> shifted_best_H = shift_eyes(best_H, Z, bg_type, shift_randomness::COMBINE);
+        shifted_best_H.makeCompressed();
+
+		benchmarks::BUSChannellWynersEC best_busc_bm{shifted_best_H, {0.005, 0.01, 0.02, 0.04}, {-1, -1}, true};
         Result best_obj_func{best_busc_bm.run(QBER_range.first, QBER_range.second, QBER_step, LDPC_algo::NMS, false)};
         ss << best_obj_func;
         generateLogs_console(logger, "DATA", "greedy_optimizer", "plain_results", ss.str());
 		ss.str("");
 
 		
-		dump_matrix(bg, output_mat_path);
+		dump_matrix(shifted_best_H, output_mat_path);
 		generateLogs_console(logger, "INFO", "greedy_optimizer", "matrix_dumping", "Matrix was dumped");
 
 

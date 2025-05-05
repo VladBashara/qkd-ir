@@ -118,6 +118,16 @@ int main(int argc, char* argv[]) {
         validate_params(popul_size, P_m, input_mat_path, output_mat_path, log_path, Z, QBER_range, QBER_step, mu, iter_amount, logger);
         
         print_parameters(popul_size, P_m, input_mat_path, output_mat_path, log_path, Z, QBER_range, QBER_step, mu, iter_amount, logger);
+
+        BG_type bg_type;
+        auto mat_stem = std::filesystem::path(input_mat_path).stem();
+        if (mat_stem == "BG1") {
+            bg_type = BG_type::BG1;
+        } else if (mat_stem == "BG2") {
+            bg_type = BG_type::BG2;
+        } else {
+            bg_type = BG_type::NOT_5G;
+        }
         
 
         std::multimap<size_t, std::multimap<IntersectionMetric, GeneticMatrix, std::greater<IntersectionMetric>>> some_res = genetic_algo(popul_size, P_m, input_mat_path, Z, QBER_range, mu, iter_amount, logger, csv);
@@ -135,7 +145,13 @@ int main(int argc, char* argv[]) {
         }
         
         generateLogs_console(logger, "DATA", "genetic_optimizer", "plain_results", mat_stem + " metric: " + std::to_string(origin_mat_metric));
-        benchmarks::BUSChannellWynersEC origin_busc_bm{origin_mat_matrix, {0.005, 0.01, 0.02, 0.04}, {-1, -1}, true};
+
+        Eigen::SparseMatrix<GF2, Eigen::RowMajor> origin_H = enhance_from_base(origin_mat_matrix, Z);
+        origin_H.makeCompressed();
+        Eigen::SparseMatrix<GF2, Eigen::RowMajor> shifted_origin_H = shift_eyes(origin_H, Z, bg_type, shift_randomness::COMBINE);
+        shifted_origin_H.makeCompressed();
+
+        benchmarks::BUSChannellWynersEC origin_busc_bm{shifted_origin_H, {0.005, 0.01, 0.02, 0.04}, {-1, -1}, true};
         Result origin_obj_func{origin_busc_bm.run(QBER_range.first, QBER_range.second, QBER_step, LDPC_algo::NMS, false)};
         
         std::stringstream ss;
@@ -156,14 +172,20 @@ int main(int argc, char* argv[]) {
         }
         
         generateLogs_console(logger, "DATA", "genetic_optimizer", "plain_results", "All epochs best metric: " + std::to_string(best_metric));
-        benchmarks::BUSChannellWynersEC best_busc_bm{best_matrix, {0.005, 0.01, 0.02, 0.04}, {-1, -1}, true};
+        
+        Eigen::SparseMatrix<GF2, Eigen::RowMajor> best_H = enhance_from_base(best_matrix, Z);
+        best_H.makeCompressed();
+        Eigen::SparseMatrix<GF2, Eigen::RowMajor> shifted_best_H = shift_eyes(best_H, Z, bg_type, shift_randomness::COMBINE);
+        shifted_best_H.makeCompressed();
+
+        benchmarks::BUSChannellWynersEC best_busc_bm{shifted_best_H, {0.005, 0.01, 0.02, 0.04}, {-1, -1}, true};
         Result best_obj_func{best_busc_bm.run(QBER_range.first, QBER_range.second, QBER_step, LDPC_algo::NMS, false)};
         
         ss << best_obj_func;
         generateLogs_console(logger, "DATA", "genetic_optimizer", "plain_results", ss.str());
         ss.str("");
 
-        dump_matrix(best_matrix, output_mat_path);
+        dump_matrix(shifted_best_H, output_mat_path);
         generateLogs_console(logger, "INFO", "genetic_optimizer", "matrix_dumping", "Matrix was dumped");
 
         std::chrono::steady_clock::time_point end_time = std::chrono::steady_clock::now();
